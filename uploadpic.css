@@ -1,0 +1,78 @@
+form.imagebox {
+    text-decoration: none;
+    width: 192px;
+    height: 126px;
+    border: 1px solid #dcdcdc;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: #f8f8f8;
+    position: relative;
+    color: #333;
+}
+
+    form.imagebox.is-empty {
+        border: 1px solid #ff0000 !important;
+    }
+
+    form.imagebox.more_imgbox {
+        display: block;
+        margin-top: 20px;
+        position: relative;
+    }
+
+    form.imagebox > i.remove_img {
+        position: absolute;
+        background: url(/Content/global/img/portlet-remove-icon.png) center no-repeat;
+        top: -10px;
+        line-height: 22px;
+        width: 22px;
+        height: 22px;
+        right: -10px;
+        background-size: cover;
+        cursor: pointer;
+        display: none;
+    }
+
+    form.imagebox > span.text-loading {
+        font-size: 12px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: #e5e5e5;
+        display: inline-block;
+        height: 126px;
+        width: 192px;
+        line-height: 126px;
+        text-align: center;
+        display: none;
+    }
+
+        form.imagebox > span.text-loading > i.loading {
+            background: url(/Content/global/img/input-spinner.gif) no-repeat;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+            padding-right: 6px;
+        }
+
+    form.imagebox > input[type="file"] {
+        position: absolute;
+        padding: 0;
+        margin: 0;
+        width: 192px;
+        height: 126px;
+        border: none;
+        line-height: 126px;
+        opacity: 0;
+        filter: alpha(opacity=0);
+        cursor: pointer;
+        font-size: 0;
+        left: 0;
+        top: 0;
+    }
+
+    form.imagebox > img.img-src {
+        width: 100%;
+        height: 100%;
+    }
