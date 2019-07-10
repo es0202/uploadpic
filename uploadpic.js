@@ -3,14 +3,15 @@
     //default setting
     this.formAction = '';
     this.param = {}; //uploadimg接口参数
-    this.imgSrc = '/Content/global/img/upload2.png';
+    this.imgSrc = '';
     this.imgSize = 5; //上传图片大小限制，单位M
     this.downloadUrl = '';
     this.isAppend = false;
     this.limit = 4;
     this.isLoad = false;
-    this.limitSrc = ['/Content/global/img/upload2.png']; //load图片路径，若仅限一张需传limit:1
+    this.limitSrc = []; //load图片路径，若仅限一张需传limit:1
     this.needMosaic = true; //load图片是否打码
+    this.deleteUrl = '';
     this.element = $(element);
     if (typeof options !== 'object' || options === null)
       options = {};
@@ -85,28 +86,24 @@
       this.isLoad = false; //正常上传功能
       return;
     }
-    if (this.isAppend) {
-      this.element.append('<form method="post" action="' + this.formAction +
-        '" enctype="multipart/form-data" class="imagebox ' + (this.moreImgbox ? "more_imgbox" : "") + '">' +
-        '<input type="file" name="file" value="" accept=".png,.jpg,.jpeg" />' +
-        '<img class="img-src" src="' + this.imgSrc + '" alt="" />' +
-        '<span class="text-loading"><i class="loading"></i>图片上传中...</span>' +
-        '<i class="remove_img"></i>' +
-        '</form>');
-    } else {
-      this.element.html('<form method="post" action="' + this.formAction +
-        '" enctype="multipart/form-data" class="imagebox ' + (this.moreImgbox ? "more_imgbox" : "") + '">' +
-        '<input type="file" name="file" value="" accept=".png,.jpg,.jpeg" />' +
-        '<img class="img-src" src="' + this.imgSrc + '" alt="" />' +
-        '<span class="text-loading"><i class="loading"></i>图片上传中...</span>' +
-        '<i class="remove_img"></i>' +
-        '</form>');
-    }
+    this.element.html('<form method="post" action="' + this.formAction +
+      '" enctype="multipart/form-data" class="imagebox">' +
+      '<input type="file" name="file" value="" accept=".png,.jpg,.jpeg" />' +
+      '<img class="img-src" src="' + this.imgSrc + '" alt="" />' +
+      '<span class="text-loading"><i class="loading"></i>图片上传中...</span>' +
+      '<i class="remove_img"></i>' +
+      '</form>');
     //event listener
     this.element.find('form')
       .on('change.uploadpic', 'input[type="file"]', $.proxy(this.upload, this))
       .on('click.uploadpic', 'span.text-loading', $.proxy(this.refresh, this))
-      .on('click.uploadpic', 'i.remove_img', $.proxy(this.remove, this));
+    if (this.isAppend) {
+      this.element.find('form')
+        .on('click.uploadpic', 'i.remove_img', $.proxy(this.clear, this));
+    } else {
+      this.element.find('form')
+        .on('click.uploadpic', 'i.remove_img', $.proxy(this.remove, this));
+    }
   }
   UploadPic.prototype = {
     constructor: UploadPic,
@@ -154,7 +151,9 @@
         e.attr('data-filepath', filepath);
         e.next('img')[0].src = that.downloadUrl + '?filePath=' + filepath + '&needMosaic=' + needMosaic;
         e.next().next('.text-loading').hide();
-        e.next().next().next('i.remove_img').show();
+        //input disabled 不可删除图片
+        if (!e.attr('disabled'))
+          e.next().next().next('i.remove_img').show();
         e.parent('form').removeClass('is-empty');
         e.next('img').removeAttr('data-src');
         e.next('img').removeAttr('data-needMosaic');
@@ -193,24 +192,61 @@
       }
     },
     remove: function(e) {
-      //上传多张第一张不清除dom结构
       var that = this;
-      if (that.isAppend) {
-        that.element.find('img').each(function() {
-          if ($(this).attr('src') == that.imgSrc && $(this).next('.text-loading').is(":hidden"))
-            $(this).closest('form').remove();
-        })
-      }
       var img = $(e.target).prev().prev('img');
-      img.prev('input').val("");
-      img.prev('input').removeAttr('data-filepath');
-      img.attr('src', that.imgSrc);
-      $(e.target).hide();
+      //删除图片
+      if (that.deleteUrl) {
+        $.ajax({
+          url: that.deleteUrl,
+          type: 'post',
+          data: {
+            filepath: img.prev('input').attr('data-filepath')
+          },
+          success: function(result) {
+            if (result.ReturnCode == 0) {
+              img.prev('input').val("");
+              img.prev('input').removeAttr('data-filepath');
+              img.attr('src', that.imgSrc);
+              $(e.target).hide();
+            }
+          },
+          error: function(err) {
+            $.Alert('当前系统繁忙，请稍后重试。');
+          }
+        })
+      } else {
+        img.prev('input').val("");
+        img.prev('input').removeAttr('data-filepath');
+        img.attr('src', that.imgSrc);
+        $(e.target).hide();
+      }
     },
     clear: function(e) {
       var that = this;
       var form = $(e.target).closest('form');
-      form.remove();
+      //删除图片
+      if (that.deleteUrl) {
+        $.ajax({
+          url: that.deleteUrl,
+          type: 'post',
+          data: {
+            filepath: form.find('input').attr('data-filepath')
+          },
+          success: function(result) {
+            if (result.ReturnCode == 0) {
+              form.remove();
+            }
+          },
+          error: function(err) {
+            $.Alert('当前系统繁忙，请稍后重试。');
+          }
+        })
+      } else {
+        form.remove();
+      }
+      if ($(that.element.children('form')[0]).hasClass('more_imgbox')) {
+        $(that.element.children('form')[0]).removeClass('more_imgbox')
+      }
       var addBox = true;
       that.element.find('img').each(function() {
         if ($(this).attr('src') == that.imgSrc && $(this).next('.text-loading').is(":hidden"))
