@@ -22,7 +22,7 @@ form.imagebox {
 
     form.imagebox > i.remove_img {
         position: absolute;
-        background: url(/Content/global/img/portlet-remove-icon.png) center no-repeat;
+        background: url(./image/remove.png) center no-repeat;
         top: -10px;
         line-height: 22px;
         width: 22px;
@@ -44,11 +44,11 @@ form.imagebox {
         width: 192px;
         line-height: 126px;
         text-align: center;
-        display: none;
+        /* display: none; */
     }
 
         form.imagebox > span.text-loading > i.loading {
-            background: url(/Content/global/img/input-spinner.gif) no-repeat;
+            background: url(./image/loading.gif) no-repeat;
             width: 20px;
             height: 20px;
             display: inline-block;

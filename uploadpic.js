@@ -3,20 +3,24 @@
     //default setting
     this.formAction = '';
     this.param = {}; //uploadimg接口参数
-    this.imgSrc = '';
+    this.imgSrc = './image/upload2.png';
     this.imgSize = 5; //上传图片大小限制，单位M
     this.downloadUrl = '';
     this.isAppend = false;
     this.limit = 4;
     this.isLoad = false;
-    this.limitSrc = []; //load图片路径，若仅限一张需传limit:1
+    this.limitSrc = ['./image/upload2.png']; //load图片路径，若仅限一张需传limit:1
     this.needMosaic = true; //load图片是否打码
     this.deleteUrl = '';
+    this.hideBtn = false; //是否隐藏删除图片按钮
     this.element = $(element);
     if (typeof options !== 'object' || options === null)
       options = {};
-    if (Object.prototype.toString.call(options.param).substring(8) === "Object]") {
+    if (options.param && Object.prototype.toString.call(options.param).substring(8) === "Object]") {
       this.param = options.param
+    }
+    if (typeof options.hideBtn === "boolean") {
+      this.hideBtn = options.hideBtn
     }
     if (typeof options.formAction === "string") {
       this.formAction = options.formAction
@@ -111,11 +115,11 @@
       var that = this;
       if (e.target.value) {
         if (!/\.(jpg|jpeg|png)$/.test(e.target.value.toLowerCase())) {
-          doAlert('不支持上传该格式图片！');
+          alert('不支持上传该格式图片！');
           return;
         }
         if (e.target.files && e.target.files[0].size > this.imgSize * 1024 * 1024) {
-          doAlert('图片大小超过' + this.imgSize + 'M！');
+          alert('图片大小超过' + this.imgSize + 'M！');
           return;
         }
         $(e.target).next().next('.text-loading').show();
@@ -132,7 +136,7 @@
             }
           },
           error: function() {
-            doAlert('当前系统繁忙，请稍后重试。');
+            alert('当前系统繁忙，请稍后重试。');
             $(e.target).next().next('.text-loading').hide();
             $(e.target).val('');
           }
@@ -142,7 +146,10 @@
     downloadImg: function(e, filepath, needMosaic) {
       var that = this;
       //input->e
-      e.next().next('.text-loading').html('<i></i>图片上传中...');
+      if (that.isLoad)
+        e.next().next('.text-loading').html('<i></i>图片下载中...');
+      else
+        e.next().next('.text-loading').html('<i></i>图片上传中...');
       e.next().next('.text-loading').show();
       //图片加载完成
       var img = new Image();
@@ -151,8 +158,38 @@
         e.attr('data-filepath', filepath);
         e.next('img')[0].src = that.downloadUrl + '?filePath=' + filepath + '&needMosaic=' + needMosaic;
         e.next().next('.text-loading').hide();
-        //input disabled 不可删除图片
-        if (!e.attr('disabled'))
+        //不可删除图片
+        if (!that.hideBtn)
+          e.next().next().next('i.remove_img').show();
+        e.parent('form').removeClass('is-empty');
+        e.next('img').removeAttr('data-src');
+        e.next('img').removeAttr('data-needMosaic');
+        //上传多张，load自行添加
+        var addBox = true;
+        that.element.find('img').each(function() {
+          if ($(this).attr('src') == that.imgSrc && $(this).next('.text-loading').is(":hidden"))
+            addBox = false;
+        })
+        if (!that.isLoad && that.isAppend && that.element.children('form').length < that.limit && addBox) {
+          that.element.append('<form method="post" action="' + that.formAction +
+            '" enctype="multipart/form-data" class="imagebox more_imgbox">' +
+            '<input type="file" name="file" value="" accept=".png,.jpg,.jpeg" />' +
+            '<img class="img-src" src="' + that.imgSrc + '" alt="" />' +
+            '<span class="text-loading"><i class="loading"></i>图片上传中...</span>' +
+            '<i class="remove_img"></i>' +
+            '</form>');
+          var lastform = that.element.children('form').last();
+          lastform.on('change.uploadpic', 'input[type="file"]', $.proxy(UploadPic.prototype.upload.bind(that), that))
+            .on('click.uploadpic', 'span.text-loading', $.proxy(UploadPic.prototype.refresh.bind(that), that))
+            .on('click.uploadpic', 'i.remove_img', $.proxy(UploadPic.prototype.clear.bind(that), that));
+        }
+      }
+      //兼容ie8
+      if (img.complete) {
+        e.attr('data-filepath', filepath);
+        e.next('img')[0].src = that.downloadUrl + '?filePath=' + filepath + '&needMosaic=' + needMosaic;
+        e.next().next('.text-loading').hide();
+        if (!that.hideBtn)
           e.next().next().next('i.remove_img').show();
         e.parent('form').removeClass('is-empty');
         e.next('img').removeAttr('data-src');
@@ -211,7 +248,7 @@
             }
           },
           error: function(err) {
-            $.Alert('当前系统繁忙，请稍后重试。');
+            alert('当前系统繁忙，请稍后重试。');
           }
         })
       } else {
@@ -235,17 +272,20 @@
           success: function(result) {
             if (result.ReturnCode == 0) {
               form.remove();
+              if ($(that.element.children('form')[0]).hasClass('more_imgbox')) {
+                $(that.element.children('form')[0]).removeClass('more_imgbox')
+              }
             }
           },
           error: function(err) {
-            $.Alert('当前系统繁忙，请稍后重试。');
+            alert('当前系统繁忙，请稍后重试。');
           }
         })
       } else {
         form.remove();
-      }
-      if ($(that.element.children('form')[0]).hasClass('more_imgbox')) {
-        $(that.element.children('form')[0]).removeClass('more_imgbox')
+        if ($(that.element.children('form')[0]).hasClass('more_imgbox')) {
+          $(that.element.children('form')[0]).removeClass('more_imgbox')
+        }
       }
       var addBox = true;
       that.element.find('img').each(function() {
@@ -269,6 +309,22 @@
   }
   $.fn.uploadpic = function(option) {
     $(this).html('');
+    //兼容 ie8
+    if (!Function.prototype.bind) {
+      Function.prototype.bind = function() {
+        if (typeof this !== 'function') {
+          throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+        }
+        var _this = this;
+        var obj = arguments[0];
+        var ags = Array.prototype.slice.call(arguments, 1);
+        return function() {
+          //绑定事件参数event
+          var arg = Array.prototype.slice.call(arguments);
+          return _this.apply(obj, ags.concat(arg));
+        };
+      };
+    }
     return new UploadPic($(this), option);
   }
 })(jQuery);
