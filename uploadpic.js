@@ -275,6 +275,24 @@
               if ($(that.element.children('form')[0]).hasClass('more_imgbox')) {
                 $(that.element.children('form')[0]).removeClass('more_imgbox')
               }
+              var addBox = true;
+              that.element.find('img').each(function() {
+                if ($(this).attr('src') == that.imgSrc && $(this).next('.text-loading').is(":hidden"))
+                  addBox = false;
+              })
+              if (that.element.children('form').length < that.limit && addBox) {
+                that.element.append('<form method="post" action="' + that.formAction +
+                  '" enctype="multipart/form-data" class="imagebox more_imgbox">' +
+                  '<input type="file" name="file" value="" accept=".png,.jpg,.jpeg" />' +
+                  '<img class="img-src" src="' + that.imgSrc + '" alt="" />' +
+                  '<span class="text-loading"><i class="loading"></i>图片上传中...</span>' +
+                  '<i class="remove_img"></i>' +
+                  '</form>');
+                var lastform = that.element.children('form').last();
+                lastform.on('change.uploadpic', 'input[type="file"]', $.proxy(UploadPic.prototype.upload.bind(that), that))
+                  .on('click.uploadpic', 'span.text-loading', $.proxy(UploadPic.prototype.refresh.bind(that), that))
+                  .on('click.uploadpic', 'i.remove_img', $.proxy(UploadPic.prototype.clear.bind(that), that));
+              }
             }
           },
           error: function(err) {
@@ -286,24 +304,24 @@
         if ($(that.element.children('form')[0]).hasClass('more_imgbox')) {
           $(that.element.children('form')[0]).removeClass('more_imgbox')
         }
-      }
-      var addBox = true;
-      that.element.find('img').each(function() {
-        if ($(this).attr('src') == that.imgSrc && $(this).next('.text-loading').is(":hidden"))
-          addBox = false;
-      })
-      if (that.element.children('form').length < that.limit && addBox) {
-        that.element.append('<form method="post" action="' + that.formAction +
-          '" enctype="multipart/form-data" class="imagebox more_imgbox">' +
-          '<input type="file" name="file" value="" accept=".png,.jpg,.jpeg" />' +
-          '<img class="img-src" src="' + that.imgSrc + '" alt="" />' +
-          '<span class="text-loading"><i class="loading"></i>图片上传中...</span>' +
-          '<i class="remove_img"></i>' +
-          '</form>');
-        var lastform = that.element.children('form').last();
-        lastform.on('change.uploadpic', 'input[type="file"]', $.proxy(UploadPic.prototype.upload.bind(that), that))
-          .on('click.uploadpic', 'span.text-loading', $.proxy(UploadPic.prototype.refresh.bind(that), that))
-          .on('click.uploadpic', 'i.remove_img', $.proxy(UploadPic.prototype.clear.bind(that), that));
+        var addBox = true;
+        that.element.find('img').each(function() {
+          if ($(this).attr('src') == that.imgSrc && $(this).next('.text-loading').is(":hidden"))
+            addBox = false;
+        })
+        if (that.element.children('form').length < that.limit && addBox) {
+          that.element.append('<form method="post" action="' + that.formAction +
+            '" enctype="multipart/form-data" class="imagebox more_imgbox">' +
+            '<input type="file" name="file" value="" accept=".png,.jpg,.jpeg" />' +
+            '<img class="img-src" src="' + that.imgSrc + '" alt="" />' +
+            '<span class="text-loading"><i class="loading"></i>图片上传中...</span>' +
+            '<i class="remove_img"></i>' +
+            '</form>');
+          var lastform = that.element.children('form').last();
+          lastform.on('change.uploadpic', 'input[type="file"]', $.proxy(UploadPic.prototype.upload.bind(that), that))
+            .on('click.uploadpic', 'span.text-loading', $.proxy(UploadPic.prototype.refresh.bind(that), that))
+            .on('click.uploadpic', 'i.remove_img', $.proxy(UploadPic.prototype.clear.bind(that), that));
+        }
       }
     }
   }
