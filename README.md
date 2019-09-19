@@ -1,5 +1,6 @@
 # uploadpic
 上传预览图片插件
+兼容至ie8
 
 ### 需要先引用jquery和ajaxform.js插件
 上传图片接口返回json demo
